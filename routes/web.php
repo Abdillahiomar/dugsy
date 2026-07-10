@@ -1,0 +1,121 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Livewire\Volt\Volt;
+use App\Http\Controllers\BulletinController;
+//use Livewire\Livewire;
+
+Route::view('/', 'welcome')->name('home');
+
+
+Route::middleware(['auth', 'verified'])->group(function () {
+
+    // ── Accessible à tous les rôles connectés ─────────────────────
+    Volt::route('dashboard', 'dashboard')->name('dashboard');
+
+     Volt::route('students/enroll', 'students.enroll')->name('students.enroll');
+    // ── Élèves ─────────────────────────────────────────────────────
+    Route::middleware('can:students.view')->group(function () {
+        Volt::route('students', 'students.index')->name('students.index');
+        Volt::route('students/{student}', 'students.show')->name('students.show');
+    });
+    Route::middleware('can:students.show')->group(function () {
+        Volt::route('parent/students/{student}', 'students.show')->name('parent_students.show');
+    });
+
+    Route::middleware('auth')->group(function () {
+        Volt::route('parent/children', 'parent.children')->name('parent.children');
+    });
+
+    Route::middleware('can:students.enroll')->group(function () {
+        //Volt::route('students/enroll', 'students.enroll')->name('students.enroll');
+        Volt::route('students/{student}/reenroll', 'students.reenroll')->name('students.reenroll');
+    });
+
+   
+
+    Route::middleware('can:students.edit')->group(function () {
+        Volt::route('students/{student}/edit', 'students.edit')->name('students.edit');
+    });
+
+    // ── Classes ────────────────────────────────────────────────────
+    Route::middleware('can:classes.view')->group(function () {
+        Volt::route('classes', 'classes.index')->name('classes.index');
+        Volt::route('classes/{schoolClass}/subjects', 'classes.subjects')->name('classes.subjects');
+    });
+
+    Route::middleware('can:subjects.view')->group(function () {
+        Volt::route('subjects', 'matieres.index')->name('subjects.index');
+    });
+
+    // ── Notes ──────────────────────────────────────────────────────
+    Route::middleware('can:grades.view')->group(function () {
+        Volt::route('grades', 'grades.index')->name('grades.index');
+    });
+
+    Route::middleware('can:bulletins.view')->group(function () {
+        Volt::route('bulletins/class/{schoolClass}', 'bulletins.class')->name('bulletins.class');
+        Volt::route('students/{student}/bulletins/{bulletin}', 'bulletins.show')->name('bulletins.show');
+        Route::get('students/{student}/bulletins/{bulletin}/pdf',
+            [App\Http\Controllers\BulletinController::class, 'pdf'])->name('bulletins.pdf');
+    });
+
+    // ── Absences ───────────────────────────────────────────────────
+    Route::middleware('can:absences.view')->group(function () {
+        Volt::route('absences', 'absences.index')->name('absences.index');
+    });
+
+    // ── Finances ───────────────────────────────────────────────────
+    Route::middleware('can:finance.view')->group(function () {
+        // finance routes...
+    });
+
+    // ── Configuration (admin seulement) ───────────────────────────
+    Route::middleware('can:school.settings')->group(function () {
+        Volt::route('school-config/general', 'school-general')->name('school-config.general');
+    });
+
+    Route::middleware('can:fees.manage')->group(function () {
+        Volt::route('school-config/fees', 'fee-settings')->name('school-config.fees');
+    });
+
+    // ── Personnel ──────────────────────────────────────────────────
+    Route::middleware('can:staff.view')->group(function () {
+        Volt::route('staff', 'staff.index')->name('staff.index');
+        Volt::route('staff/{staff}/edit', 'staff.edit')->name('staff.edit');
+    });
+
+    // ── Utilisateurs ───────────────────────────────────────────────
+    Route::middleware('can:users.view')->group(function () {
+        Volt::route('users', 'users.index')->name('users.index');
+    });
+
+    // ── Années académiques ─────────────────────────────────────────
+    Route::middleware('can:academic_years.view')->group(function () {
+        Volt::route('academic-years', 'academic-years.index')->name('academic-years.index');
+    });
+
+
+    Route::middleware('can:school.settings')->group(function () {
+        Volt::route('school-config/general',   'school-general')       ->name('school-config.general');
+        Volt::route('school-config/fees',      'fee-settings')         ->name('school-config.fees');
+        Volt::route('school-config/admission', 'school-config.admission')->name('school-config.admission');
+        Volt::route('school-config/grading',   'school-config.grading') ->name('school-config.grading');
+    });
+
+
+    Route::middleware('can:homeworks.view')->group(function () {
+        Volt::route('homeworks', 'homeworks.index')->name('homeworks.index');
+        Volt::route('homeworks/{homework}', 'homeworks.show')->name('homeworks.show');
+    });
+
+    Route::middleware('can:announcements.view')->group(function () {
+        Volt::route('announcements', 'announcements.index')->name('announcements.index');
+        Volt::route('announcements/{announcement}', 'announcements.show')->name('announcements.show');
+    });
+});
+
+
+
+
+require __DIR__.'/settings.php';
