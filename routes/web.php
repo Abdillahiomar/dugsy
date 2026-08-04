@@ -3,7 +3,31 @@
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use App\Http\Controllers\BulletinController;
+use App\Http\Controllers\ReceiptController;
 //use Livewire\Livewire;
+
+
+Route::get('/favicon.ico', function () {
+    $school = auth()->user()?->school;
+
+    if ($school?->logo_path) {
+        $path = public_path('storage/schools/logos/' . basename($school->logo_path));
+
+        if (file_exists($path)) {
+            return response(file_get_contents($path), 200)
+                ->header('Content-Type', mime_content_type($path));
+        }
+    }
+
+    // Fallback
+    $default = public_path('favicon-default.ico');
+    if (file_exists($default)) {
+        return response(file_get_contents($default), 200)
+            ->header('Content-Type', 'image/x-icon');
+    }
+
+    abort(404);
+})->middleware('auth');
 
 Route::view('/', 'welcome')->name('home');
 
@@ -11,7 +35,13 @@ Route::view('/', 'welcome')->name('home');
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // ── Accessible à tous les rôles connectés ─────────────────────
-    Volt::route('dashboard', 'dashboard')->name('dashboard');
+    //Volt::route('dashboard', 'dashboard')->name('dashboard');
+
+    
+
+    Route::get('/dashboard', \App\Livewire\Dashboard\DashboardPage::class)
+    ->name('dashboard')
+    ->middleware(['auth','verified']);
 
      Volt::route('students/enroll', 'students.enroll')->name('students.enroll');
     // ── Élèves ─────────────────────────────────────────────────────
@@ -19,6 +49,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Volt::route('students', 'students.index')->name('students.index');
         Volt::route('students/{student}', 'students.show')->name('students.show');
     });
+
     Route::middleware('can:students.show')->group(function () {
         Volt::route('parent/students/{student}', 'students.show')->name('parent_students.show');
     });
@@ -54,11 +85,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::middleware('can:bulletins.view')->group(function () {
+        Volt::route('bulletins/list', 'bulletins.index')->name('bulletins.index');
         Volt::route('bulletins/class/{schoolClass}', 'bulletins.class')->name('bulletins.class');
         Volt::route('students/{student}/bulletins/{bulletin}', 'bulletins.show')->name('bulletins.show');
         Route::get('students/{student}/bulletins/{bulletin}/pdf',
             [App\Http\Controllers\BulletinController::class, 'pdf'])->name('bulletins.pdf');
     });
+
+
+    // PDF individuel
+    Route::get('bulletins/{student}/{bulletin}/pdf',
+        [BulletinController::class, 'pdf']
+    )->name('bulletins.pdf')->middleware('can:bulletins.view');
+
+    // PDF groupé — TOUS les bulletins d'une classe en un seul fichier
+    Route::get('bulletins/batch/{schoolClass}/{period}',
+        [BulletinController::class, 'batchPdf']
+    )->name('bulletins.batch-pdf')->middleware('can:bulletins.generate');
 
     // ── Absences ───────────────────────────────────────────────────
     Route::middleware('can:absences.view')->group(function () {
@@ -66,9 +109,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // ── Finances ───────────────────────────────────────────────────
-    Route::middleware('can:finance.view')->group(function () {
-        // finance routes...
-    });
+   
+
+    Route::middleware(['auth', 'verified'])->prefix('finances')->name('finances.')->group(function () {
+        Volt::route('/', 'finance.dashboard')->name('index')->middleware('can:finance.view');
+        Volt::route('/encaissement', 'finance.collect')->name('collect');
+        Volt::route('/journal', 'finance.cashbook')->name('cashbook')->middleware('can:finance.view');
+        Volt::route('/impayes', 'finance.receivables')->name('receivables')->middleware('can:finance.view');
+        Route::get('/recus/{receipt}', ReceiptController::class)->name('receipt')->middleware('can:finance.view');
+    });;
+
+    
 
     // ── Configuration (admin seulement) ───────────────────────────
     Route::middleware('can:school.settings')->group(function () {
@@ -112,6 +163,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('can:announcements.view')->group(function () {
         Volt::route('announcements', 'announcements.index')->name('announcements.index');
         Volt::route('announcements/{announcement}', 'announcements.show')->name('announcements.show');
+    });
+
+
+    Route::middleware('can:timetable.view')->group(function () {
+        Volt::route('timetable', 'timetable.index')->name('timetable.index');
+    });
+
+    Route::middleware('can:events.view')->group(function () {
+        Volt::route('calendar', 'calendar.index')->name('calendar.index');
     });
 });
 

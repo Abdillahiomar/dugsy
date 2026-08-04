@@ -1335,7 +1335,7 @@ new class extends Component
 {{-- Remplacer @push('scripts') ... @endpush par : --}}
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function () {
 
     @if (in_array($role, ['admin', 'directeur']))
     // ── Admin : inscriptions + niveaux ────────────────────────

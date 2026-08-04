@@ -52,19 +52,26 @@ new class extends Component
     private function getPageStudentIds(): array
     {
         $year = AcademicYearService::current();
+
         return Student::query()
+            // ── Même filtre année ──
+            ->when($year, fn ($q) =>
+                $q->whereHas('schoolYears', fn ($q) =>
+                    $q->where('academic_year_id', $year->id)
+                )
+            )
             ->when($this->search, fn ($q) =>
                 $q->where(fn ($q) =>
                     $q->where('first_name', 'like', "%{$this->search}%")
-                      ->orWhere('last_name',  'like', "%{$this->search}%")
-                      ->orWhere('matricule',  'like', "%{$this->search}%")
+                    ->orWhere('last_name',  'like', "%{$this->search}%")
+                    ->orWhere('matricule',  'like', "%{$this->search}%")
                 )
             )
             ->when($this->statusFilter, fn ($q) => $q->where('status', $this->statusFilter))
             ->when($this->classFilter && $year, fn ($q) =>
                 $q->whereHas('schoolYears', fn ($q) =>
                     $q->where('academic_year_id', $year->id)
-                      ->where('school_class_id', $this->classFilter)
+                    ->where('school_class_id', $this->classFilter)
                 )
             )
             ->paginate(15)
@@ -106,6 +113,12 @@ new class extends Component
         $year = AcademicYearService::current();
 
         $students = Student::query()
+            // ── Filtrer UNIQUEMENT les élèves inscrits cette année ──
+            ->when($year, fn ($q) =>
+                $q->whereHas('schoolYears', fn ($q) =>
+                    $q->where('academic_year_id', $year->id)
+                )
+            )
             ->when($this->search, fn ($q) =>
                 $q->where(fn ($q) =>
                     $q->where('first_name', 'like', "%{$this->search}%")
@@ -465,7 +478,7 @@ new class extends Component
                             default       => 'badge-active',
                         };
                         $statusLabel = match($student->status) {
-                            'active'      => 'Inscrit',
+                            'active', 'enrolled'      => 'Inscrit',
                             'transferred' => 'Transféré',
                             'graduated'   => 'Diplômé',
                             'dropped'     => 'Abandonné',
@@ -507,7 +520,7 @@ new class extends Component
                             @endif
                         </td>
                         <td>{{ $student->gender === 'M' ? 'Masculin' : ($student->gender === 'F' ? 'Féminin' : '—') }}</td>
-                        <td><span class="badge {{ $badgeClass }}">@php
+                        <td>@php
                                     // Remplace la ligne $badgeClass et $statusLabel par :
                                     $ssyStatus   = $schoolYear?->status ?? $student->status;
                                     $badgeClass  = match($ssyStatus) {
@@ -525,7 +538,11 @@ new class extends Component
                                         default               => $ssyStatus,
                                     };
                                 @endphp
-                                </span></td>
+                                
+                             <span class="badge {{ $badgeClass }}">
+                                {{ $statusLabel }}
+                            </span>
+                            </td>
                         <td>
                             <div class="actions-cell">
                                 <a href="{{ route('students.show', $student) }}" class="btn-action btn-see" wire:navigate>

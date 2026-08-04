@@ -23,6 +23,29 @@
 
     {{-- Livewire --}}
     @livewireStyles
+
+    
+    
+    {{-- Favicon dynamique selon l'école --}}
+    @auth
+        @php
+            $school    = auth()->user()->school;
+            $logoFile  = $school?->logo_path ? public_path('storage/schools/logos/'.basename($school->logo_path)) : null;
+            $logoUrl   = ($logoFile && file_exists($logoFile))
+                ? asset('storage/schools/logos/'.basename($school->logo_path)).'?v='.filemtime($logoFile)
+                : null;
+        @endphp
+
+        @if ($logoUrl)
+            <link rel="icon" type="image/png" href="{{ $logoUrl }}">
+        @else
+            <link rel="icon" href="/favicon.ico">
+        @endif
+    @else
+        <link rel="icon" href="/favicon.ico">
+    @endauth
+   
+
 </head>
 <body>
 
@@ -46,6 +69,8 @@
 
 {{-- Livewire + Alpine --}}
 @livewireScripts
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+
 @stack('scripts')
 </body>
 </html>

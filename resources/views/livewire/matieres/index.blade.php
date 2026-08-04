@@ -559,7 +559,7 @@ new class extends Component
                                 </div>
                                 <div class="subject-stat-row">
                                     <span class="subject-stat-label">Cycle</span>
-                                    <span class="subject-stat-value">{{ $subject->cycle ?? 'Tous' }}</span>
+                                    <span class="subject-stat-value">{{ $subject->cycles ?? 'Tous' }}</span>
                                 </div>
                             </div>
 

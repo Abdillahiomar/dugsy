@@ -13,13 +13,16 @@
 
     {{-- ── Gauche : date + heure + école ── --}}
     <div class="header-left">
+        <div class="header-school-name">
+            {{ $user->school?->short_name ?? $user->school?->name ?? '' }}
+        </div>
         <div class="header-clock">
             <span class="header-date" id="hdr-date"></span>
             <span class="header-time" id="hdr-time"></span>
         </div>
-        <div class="header-school-name">
-            {{ $user->school?->short_name ?? $user->school?->name ?? '' }}
-        </div>
+       <button id="sidebarToggle" class="sidebar-toggle">
+    ☰
+</button>
     </div>
 
     {{-- ── Droite : actions + toggle + utilisateur ── --}}
@@ -55,7 +58,7 @@
                 <div class="user-menu-info">
                     <span class="user-menu-name">{{ $user->name }}</span>
                     <span class="user-menu-role">
-                        {{ $role?->label ?? ucfirst($role?->name ?? '') }}
+                        {{ $role?->label ?? ucfirst($role?->name ?? 'DOUGSI') }}
                     </span>
                 </div>
                 <svg class="user-menu-chevron"

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Livewire\Volt\Volt;
+use Livewire\Livewire;  
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,7 +34,13 @@ class AppServiceProvider extends ServiceProvider
             resource_path('views/livewire'),
         ]);
 
-        
+        Livewire::component('dashboard.widgets.stats-grid',       \App\Livewire\Dashboard\Widgets\StatsGrid::class);
+        Livewire::component('dashboard.widgets.revenue-chart',    \App\Livewire\Dashboard\Widgets\RevenueChart::class);
+        Livewire::component('dashboard.widgets.attendance-chart', \App\Livewire\Dashboard\Widgets\AttendanceChart::class);
+        Livewire::component('dashboard.widgets.payment-chart',    \App\Livewire\Dashboard\Widgets\PaymentChart::class);
+        Livewire::component('dashboard.widgets.enrollment-chart', \App\Livewire\Dashboard\Widgets\EnrollmentChart::class);
+        Livewire::component('dashboard.widgets.recent-payments',  \App\Livewire\Dashboard\Widgets\RecentPayments::class);
+        Livewire::component('dashboard.widgets.top-debtors',      \App\Livewire\Dashboard\Widgets\TopDebtors::class);
 
         // app/Providers/AppServiceProvider.php — dans boot()
         if (auth()->check() && auth()->user()->school_id) {
@@ -53,6 +60,8 @@ class AppServiceProvider extends ServiceProvider
                 ]);
             }
         }
+
+
     }
 
     /**
